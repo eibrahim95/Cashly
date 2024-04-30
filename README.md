@@ -24,6 +24,7 @@ License: MIT
 
 ### 3. Different user table ?
 - For simplicity, we will use django's auth system, and we will just add a field called System Role, which can be manager or cash collector.
+  - Update #1: On a second thought let's create a separate model for manager and collector, and make it inherit from User, this will make the relationships between the manager and task, and between the collector and its pocket make more sense.
 - What about the superuser thing ? 
   - We will ignore the superuser status in all the api endpoints, for example if a cash collector is also a superuser, he will still not be able to call endpoints that need a manager.
 
