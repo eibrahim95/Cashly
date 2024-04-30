@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import UserAdminChangeForm
 from .forms import UserAdminCreationForm
-from .models import User
+from .models import User, Manager, CashCollector
 
 
 @admin.register(User)
@@ -32,3 +32,21 @@ class UserAdmin(auth_admin.UserAdmin):
     )
     list_display = ["username", "name", "is_superuser"]
     search_fields = ["name"]
+
+
+@admin.register(Manager)
+class ManagerAdmin(UserAdmin):
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        (_("Personal info"), {"fields": ("name", "email")}),
+        (_("Important dates"), {"fields": ("last_login", "date_joined",)}),
+    )
+
+
+@admin.register(CashCollector)
+class CashControllerAdmin(UserAdmin):
+    fieldsets = (
+            (None, {"fields": ("username", "password")}),
+            (_("Personal info"), {"fields": ("name", "email")}),
+            (_("Important dates"), {"fields": ("freeze_time", "last_login", "date_joined", )}),
+        )
