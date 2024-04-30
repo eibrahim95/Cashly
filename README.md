@@ -7,10 +7,42 @@ Collect due cash
 
 License: MIT
 
+## Design Decisions
+![cashly.jpg](docs%2Fcashly.jpg)  
+<small>A general view of the system , it is not meant to be a full UML, or even a valid one.</small>
+
+### 1. Where do tasks come from?
+- I decided to make the tasks be created from the admin panel, also i'll provide a crud only to managers, so they can use to create tasks
+- I also decided to separate the Customer, so the tasks crud would need a customers' crud, which i'll also create.
+
+### 2. Multiple cash collectors and multiple managers. 
+- It makes sense that there will be multiple cash collectors and multiple managers, so the following decisions where made.
+- Managers assign tasks to specific cash collectors when creating tasks.
+  - So, we will need a crud for cash collectors.
+- We will not care which manager collects the money from the cash collector, we can assume it's the manager who created the task.
+  - For that to make more sense, task creator cannot be changed.
+
+### 3. Different user table ?
+- For simplicity, we will use django's auth system, and we will just add a field called System Role, which can be manager or cash collector.
+- What about the superuser thing ? 
+  - We will ignore the superuser status in all the api endpoints, for example if a cash collector is also a superuser, he will still not be able to call endpoints that need a manager.
+
+### 4. Keeping history
+- We will try to keep as much history as possible, for example when moving money for a cash collector's pocket to a safe, we will not delete the value from the pocket, but instead will mark it as collected.
+- This might require more storage for the DB, and might make us optimize queries as possible, but in cash related systems, transaction data are important (I think).
+
+### 5. Freezing cash collectors.
+- At a first glance I thought we would need a celery beat to execute every specific period, and look for cash collectors that has the freezing criteria and freeze them.
+- But it seemed like over engineering, and also there is the possibility of requests coming between the beats.
+- So instead, with every write to a cash collector's pocket, we will check if it passes the specified amount and then store the time in the future when this cash collector would be frozen.
+- This might slow the writes a little bit, but the gains are better.
+
+---
 ## Settings
 
 Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).
 
+---
 ## Basic Commands
 
 ### Setting Up Your Users
@@ -72,6 +104,7 @@ cd cashly
 celery -A config.celery_app worker -B -l info
 ```
 
+---
 ## Deployment
 
 The following details how to deploy this application.
