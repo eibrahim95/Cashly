@@ -13,6 +13,12 @@ SECRET_KEY = env(
     "DJANGO_SECRET_KEY",
     default="Bj3fK6ezoYsW3zGDwoQq5fUKK1iKHtnoIMKcRlPcIhGvNmZbvNhZrQvtYn8YybZJ",
 )
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "cashly.db",
+    }
+}
 # https://docs.djangoproject.com/en/dev/ref/settings/#test-runner
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
