@@ -1,19 +1,28 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from rest_framework import serializers
 
 from cashly.accounting.models import CashCollectorPocket
+from cashly.accounting.models import CashCollectorTimeLine
 from cashly.accounting.models import CentralSafe
 from cashly.users.models import CashCollector
 
 
 class CashCollectorPocketSerializer(serializers.ModelSerializer):
     payed_at = serializers.SerializerMethodField(required=False)
+    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = CashCollectorPocket
-        fields = ("id", "bill", "collected_at", "payed_at")
+        fields = ("id", "amount", "collected_at", "payed_at", "bill")
         read_only_fields = ("collector", "collected_at")
+        extra_kwargs = {
+            "bill": {"write_only": True},
+        }
+
+    def get_amount(self, obj):
+        return obj.bill.amount
 
     def get_payed_at(self, obj):
         return obj.transfer.transferred_at if hasattr(obj, "transfer") else None
@@ -28,11 +37,13 @@ class CashCollectorPocketSerializer(serializers.ModelSerializer):
         except ValidationError as e:
             raise serializers.ValidationError(
                 {"non_field_errors": e.messages},
-            ) from ValidationError
+            ) from e
+        except ObjectDoesNotExist as e:
+            raise serializers.ValidationError({"bill": ["Bill does not exist"]}) from e
         return obj
 
 
-class CentraSafeSerializer(serializers.ModelSerializer):
+class CentralSafeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CentralSafe
         fields = ("id", "pocket", "transferred_at")
@@ -43,3 +54,9 @@ class CentraSafeSerializer(serializers.ModelSerializer):
             **validated_data,
             transferred_at=timezone.now(),
         )
+
+
+class TimeLineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CashCollectorTimeLine
+        fields = ("pocket_value", "transaction_value", "checkpoint_time", "frozen")

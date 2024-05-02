@@ -13,6 +13,23 @@ from cashly.billing.models import CustomerBill
 from cashly.users.models import CashCollector
 
 
+class CashCollectorTimeLine(models.Model):
+    collector = models.ForeignKey(
+        CashCollector,
+        on_delete=models.PROTECT,
+        related_name="timeline",
+    )
+    pocket_value = models.DecimalField(max_digits=40, decimal_places=4)
+    transaction_value = models.DecimalField(max_digits=40, decimal_places=4)
+    checkpoint_time = models.DateTimeField(default=timezone.now)
+    amount_threshold_then = models.IntegerField()
+    days_threshold_then = models.IntegerField()
+    frozen = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.checkpoint_time}"
+
+
 class CashCollectorPocket(models.Model):
     collector = models.ForeignKey(
         CashCollector,
@@ -31,7 +48,10 @@ class CashCollectorPocket(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            if self.collected_at >= self.collector.freeze_time:
+            if (
+                self.collector.freeze_time
+                and self.collected_at >= self.collector.freeze_time
+            ):
                 error_message = "This collector is frozen and cannot collect any bills."
                 raise ValidationError(
                     error_message,
@@ -42,34 +62,86 @@ class CashCollectorPocket(models.Model):
                 error_message,
             )
         super().save(*args, **kwargs)
-        self.update_freezing_status()
+        self.update_freezing_status("collection")
 
-    def update_freezing_status(self):
-        if self.collector.pocket_value > settings.FREEZING_AMOUNT_THRESHOLD:
-            last_collected = (
+    def checkpoint(self, just_froze, event):
+        checkpoint_time = (
+            self.collected_at if event == "collection" else self.transfer.transferred_at
+        )
+        transaction_value = (
+            self.bill.amount if event == "collection" else self.bill.amount * -1
+        )
+        frozen = (
+            self.collector.freeze_time
+            and self.collector.freeze_time <= self.collected_at
+            or False
+        )
+        CashCollectorTimeLine.objects.create(
+            collector=self.collector,
+            pocket_value=self.collector.pocket_value if not frozen else -1,
+            transaction_value=transaction_value,
+            checkpoint_time=checkpoint_time,
+            amount_threshold_then=settings.FREEZING_AMOUNT_THRESHOLD,
+            days_threshold_then=settings.FREEZING_DAYS_THRESHOLD,
+            frozen=frozen,
+        )
+        if just_froze:
+            CashCollectorTimeLine.objects.get_or_create(
+                collector=self.collector,
+                checkpoint_time=self.collector.freeze_time,
+                defaults={
+                    "pocket_value": -1,
+                    "transaction_value": 0,
+                    "days_threshold_then": settings.FREEZING_DAYS_THRESHOLD,
+                    "amount_threshold_then": settings.FREEZING_AMOUNT_THRESHOLD,
+                    "frozen": True,
+                },
+            )
+        if not self.collector.freeze_time:
+            last_collected_value = (
                 CashCollectorPocket.objects.filter(
-                    transfer__isnull=True,
                     collector=self.collector,
                 )
                 .order_by("collected_at")
-                .annotate(
-                    total=Window(
-                        expression=Sum("bill__amount"),
-                        order_by=F("collected_at").asc(),
-                    ),
-                )
-                .values("collected_at", "total")
+                .last()
             )
-            for collection in last_collected:
-                if collection.get("total") > settings.FREEZING_AMOUNT_THRESHOLD:
-                    self.collector.freeze_time = localtime(
-                        collection.get("collected_at"),
-                    ) + timedelta(days=settings.FREEZING_DAYS_THRESHOLD)
-                    self.collector.save()
-                    break
+            if last_collected_value:
+                CashCollectorTimeLine.objects.filter(
+                    collector=self.collector,
+                    checkpoint_time__gt=localtime(last_collected_value.collected_at),
+                    pocket_value=-1,
+                ).all().delete()
+
+    def update_freezing_status(self, event):
+        just_froze = False
+        if self.collector.pocket_value > settings.FREEZING_AMOUNT_THRESHOLD:
+            if self.collector.freeze_time is None:
+                just_froze = True
+                last_collected = (
+                    CashCollectorPocket.objects.filter(
+                        transfer__isnull=True,
+                        collector=self.collector,
+                    )
+                    .order_by("collected_at")
+                    .annotate(
+                        total=Window(
+                            expression=Sum("bill__amount"),
+                            order_by=F("collected_at").asc(),
+                        ),
+                    )
+                    .values("collected_at", "total")
+                )
+                for collection in last_collected:
+                    if collection.get("total") > settings.FREEZING_AMOUNT_THRESHOLD:
+                        self.collector.freeze_time = localtime(
+                            collection.get("collected_at"),
+                        ) + timedelta(days=settings.FREEZING_DAYS_THRESHOLD)
+                        self.collector.save()
+                        break
         else:
             self.collector.freeze_time = None
             self.collector.save()
+        self.checkpoint(just_froze, event)
 
 
 class CentralSafe(models.Model):
@@ -85,4 +157,4 @@ class CentralSafe(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.pocket.update_freezing_status()
+        self.pocket.update_freezing_status("paying")

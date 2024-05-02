@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 
 from cashly.accounting.models import CashCollectorPocket
+from cashly.accounting.models import CashCollectorTimeLine
 from cashly.accounting.models import CentralSafe
 from cashly.billing.models import CustomerBill
 
@@ -33,7 +34,7 @@ class CashCollectorPocketAdmin(admin.ModelAdmin):
     readonly_fields_on_change = ("bill",)
     form = CashCollectorPocketAdminForm
     ordering = ("collected_at",)
-    search_fields = ("collector__name",)
+    search_fields = ("collector__username",)
 
     def amount(self, obj):
         return obj.bill.amount
@@ -102,3 +103,16 @@ class CentralSafe(admin.ModelAdmin):
 
     def manager(self, obj):
         return obj.pocket.bill.creator
+
+
+@admin.register(CashCollectorTimeLine)
+class CashCollectorTimeLine(admin.ModelAdmin):
+    list_display = (
+        "collector",
+        "pocket_value",
+        "transaction_value",
+        "checkpoint_time",
+        "frozen",
+    )
+    search_fields = ("collector",)
+    ordering = ("checkpoint_time",)

@@ -17,5 +17,20 @@ class UserSerializer(serializers.ModelSerializer[User]):
 class CashCollectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = CashCollector
-        fields = ("pk", "username", "name")
-        write_only_fields = ("password",)
+        fields = ("pk", "username", "name", "password")
+        extra_kwargs = {
+            "password": {"write_only": True},
+        }
+
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        user = User.objects.create(**validated_data)
+        user.set_password(password)  # Set the password
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        if "password" in validated_data:
+            password = validated_data.pop("password")
+            instance.set_password(password)  # Set the new password
+        return super().update(instance, validated_data)
