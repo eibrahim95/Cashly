@@ -43,6 +43,10 @@ class CashCollectorPocket(models.Model):
     )
     collected_at = models.DateTimeField(default=timezone.now)
 
+    class Meta:
+        verbose_name = "  Cash Collector Pocket"
+        verbose_name_plural = "  Cash Collector Pocket"
+
     def __str__(self):
         return f"{self.pk} - {self.bill.amount}"
 
@@ -151,6 +155,10 @@ class CentralSafe(models.Model):
         related_name="transfer",
     )
     transferred_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = " Central Safe"
+        verbose_name_plural = " Central Safe"
 
     def __str__(self):
         return f"{self.pk} - {self.pocket.bill.amount}: {self.transferred_at}"

@@ -28,8 +28,18 @@ class CustomerViewSet(
     queryset = Customer.objects.all()
 
     def destroy(self, *args, **kwargs):
-        super().destroy(*args, **kwargs)
-        return Response({"detail": "ok"}, status=status.HTTP_200_OK)
+        try:
+            super().destroy(*args, **kwargs)
+            return Response({"detail": "ok"}, status=status.HTTP_200_OK)
+        except ProtectedError:
+            return Response(
+                {
+                    "non_field_errors": [
+                        "Cannot delete because there are related items depending "
+                        "on this item, please delete those items first",
+                    ],
+                },
+            )
 
 
 class CustomerBillViewSet(
