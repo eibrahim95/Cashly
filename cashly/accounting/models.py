@@ -47,7 +47,10 @@ class CashCollectorPocket(models.Model):
     def update_freezing_status(self):
         if self.collector.pocket_value > settings.FREEZING_AMOUNT_THRESHOLD:
             last_collected = (
-                CashCollectorPocket.objects.filter(transfer__isnull=True)
+                CashCollectorPocket.objects.filter(
+                    transfer__isnull=True,
+                    collector=self.collector,
+                )
                 .order_by("collected_at")
                 .annotate(
                     total=Window(
