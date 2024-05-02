@@ -10,10 +10,13 @@ from cashly.accounting.api.serializers import TimeLineSerializer
 from cashly.accounting.models import CashCollectorPocket
 from cashly.accounting.models import CashCollectorTimeLine
 from cashly.billing.models import CustomerBill
+from cashly.users.authentication import CashCollectorAuthentication
 from cashly.users.models import CashCollector
 
 
 class CollectBillView(APIView):
+    authentication_classes = (CashCollectorAuthentication,)
+
     def post(self, request, **kwargs):
         next_bill = (
             CustomerBill.objects.filter(
@@ -40,6 +43,7 @@ class CollectBillView(APIView):
 class PocketView(ListAPIView):
     serializer_class = CashCollectorPocketSerializer
     queryset = CashCollectorPocket.objects.all()
+    authentication_classes = (CashCollectorAuthentication,)
 
     def get_queryset(self):
         return CashCollectorPocket.objects.filter(
@@ -50,11 +54,13 @@ class PocketView(ListAPIView):
 
 class PayView(CreateAPIView):
     serializer_class = CentralSafeSerializer
+    authentication_classes = (CashCollectorAuthentication,)
 
 
 class CashCollectorStatusReportView(ListAPIView):
     serializer_class = TimeLineSerializer
     queryset = CashCollectorTimeLine.objects.all()
+    authentication_classes = (CashCollectorAuthentication,)
 
     def get_queryset(self):
         return CashCollectorTimeLine.objects.filter(

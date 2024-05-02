@@ -13,6 +13,8 @@ from cashly.billing.api.serializers import CustomerBillSerializer
 from cashly.billing.api.serializers import CustomerSerializer
 from cashly.billing.models import Customer
 from cashly.billing.models import CustomerBill
+from cashly.users.authentication import CashCollectorAuthentication
+from cashly.users.authentication import ManagerAuthentication
 from cashly.users.models import CashCollector
 from cashly.users.models import Manager
 
@@ -26,6 +28,7 @@ class CustomerViewSet(
 ):
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()
+    authentication_classes = (ManagerAuthentication,)
 
     def destroy(self, *args, **kwargs):
         try:
@@ -51,6 +54,7 @@ class CustomerBillViewSet(
 ):
     serializer_class = CustomerBillSerializer
     queryset = CustomerBill.objects.all()
+    authentication_classes = (ManagerAuthentication,)
 
     def get_queryset(self):
         return CustomerBill.objects.filter(
@@ -75,6 +79,7 @@ class CustomerBillViewSet(
 class CollectedBills(ListAPIView):
     serializer_class = CustomerBillSerializer
     queryset = CustomerBill.objects.all()
+    authentication_classes = (CashCollectorAuthentication,)
 
     def get_queryset(self):
         return CustomerBill.objects.filter(
@@ -84,6 +89,8 @@ class CollectedBills(ListAPIView):
 
 
 class NextDueBill(APIView):
+    authentication_classes = (CashCollectorAuthentication,)
+
     def get(self, request, **kwargs):
         next_bill = (
             CustomerBill.objects.filter(

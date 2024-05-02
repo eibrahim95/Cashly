@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from cashly.users.authentication import CashCollectorAuthentication
+from cashly.users.authentication import ManagerAuthentication
 from cashly.users.models import CashCollector
 
 from .serializers import CashCollectorSerializer
@@ -26,6 +28,7 @@ class CashCollectorViewSet(
     serializer_class = CashCollectorSerializer
     queryset = CashCollector.objects.all()
     lookup_field = "username"
+    authentication_classes = (ManagerAuthentication,)
 
     def destroy(self, *args, **kwargs):
         try:
@@ -43,6 +46,8 @@ class CashCollectorViewSet(
 
 
 class CashCollectorStatus(APIView):
+    authentication_classes = (CashCollectorAuthentication,)
+
     def get(self, request, **kwargs):
         collector = CashCollector.objects.get(pk=request.user.pk)
         return Response(
