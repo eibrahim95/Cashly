@@ -30,9 +30,12 @@ urlpatterns = [
 # API URLS
 urlpatterns += [
     # API base url
-    path("api/", include("config.api_router")),
+    path("api/v1/", include("config.api_router")),
     # DRF auth token
-    path("api/auth-token/", obtain_auth_token),
+    path("api/v1/login/", obtain_auth_token),
+    path("", include("cashly.billing.urls")),
+    path("", include("cashly.users.urls")),
+    path("", include("cashly.accounting.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path(
         "api/docs/",

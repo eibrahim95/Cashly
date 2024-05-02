@@ -36,6 +36,11 @@ class CashCollectorPocket(models.Model):
                 raise ValidationError(
                     error_message,
                 )
+        if self.bill.collector != self.collector:
+            error_message = "This collector doesn't have access to this bill."
+            raise ValidationError(
+                error_message,
+            )
         super().save(*args, **kwargs)
         self.update_freezing_status()
 

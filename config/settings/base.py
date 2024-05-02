@@ -80,7 +80,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "cashly.users",
     "cashly.billing",
-    "cashly.accounting"
+    "cashly.accounting",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -257,8 +257,7 @@ LOGGING = {
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+        "cashly.users.authentication.BearerTokenAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
@@ -280,5 +279,3 @@ SPECTACULAR_SETTINGS = {
 # ------------------------------------------------------------------------------
 FREEZING_AMOUNT_THRESHOLD = env.int("FREEZING_AMOUNT_THRESHOLD", default=5000)
 FREEZING_DAYS_THRESHOLD = env.int("FREEZING_DAYS_THRESHOLD", default=2)
-
-

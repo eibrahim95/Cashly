@@ -2,11 +2,15 @@ from django.conf import settings
 from rest_framework.routers import DefaultRouter
 from rest_framework.routers import SimpleRouter
 
-from cashly.users.api.views import UserViewSet
+from cashly.billing.api.views import CustomerBillViewSet
+from cashly.billing.api.views import CustomerViewSet
+from cashly.users.api.views import CashCollectorViewSet
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 
-router.register("users", UserViewSet)
+router.register("collectors", CashCollectorViewSet)
+router.register("customers", CustomerViewSet)
+router.register("bills", CustomerBillViewSet)
 
 
 app_name = "api"
