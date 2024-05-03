@@ -1,3 +1,5 @@
+import abc
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions
 from rest_framework.authentication import TokenAuthentication
@@ -10,21 +12,23 @@ class BearerTokenAuthentication(TokenAuthentication):
     keyword = "Bearer"
 
 
-class ManagerAuthentication(BearerTokenAuthentication):
+class RoleBasedAuthentication(BearerTokenAuthentication, abc.ABC):
+    role_model = None
+
     def authenticate(self, request):
+        if not self.role_model:
+            raise NotImplementedError
         user, token = super().authenticate(request)
         if user and token:
-            if not Manager.objects.filter(pk=user.pk).exists():
+            if not self.role_model.objects.filter(pk=user.pk).exists():
                 msg = _("Invalid token header. No credentials provided.")
                 raise exceptions.AuthenticationFailed(msg)
         return user, token
 
 
-class CashCollectorAuthentication(BearerTokenAuthentication):
-    def authenticate(self, request):
-        user, token = super().authenticate(request)
-        if user and token:
-            if not CashCollector.objects.filter(pk=user.pk).exists():
-                msg = _("Invalid token header. No credentials provided.")
-                raise exceptions.AuthenticationFailed(msg)
-        return user, token
+class ManagerAuthentication(RoleBasedAuthentication):
+    role_model = Manager
+
+
+class CashCollectorAuthentication(RoleBasedAuthentication):
+    role_model = CashCollector

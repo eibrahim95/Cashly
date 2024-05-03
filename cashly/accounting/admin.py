@@ -47,8 +47,8 @@ class CashCollectorPocketAdmin(admin.ModelAdmin):
             obj,
             "transfer",
         ):  # Show inline only when editing existing instance
-            return [Transfer]
-        return []
+            return (Transfer,)
+        return ()
 
     def get_readonly_fields(self, request, obj=None):
         # If obj is None, it means we are in the add view
@@ -57,7 +57,10 @@ class CashCollectorPocketAdmin(admin.ModelAdmin):
             return ()
         # For change view, return the readonly fields defined for change
         if hasattr(obj, "transfer") is not None:
-            return ("collector", "bill")
+            return (
+                "collector",
+                "bill",
+            )
         return self.readonly_fields_on_change
 
     def message_user(

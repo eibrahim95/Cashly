@@ -27,8 +27,8 @@ class CustomerBillAdmin(admin.ModelAdmin):
             obj,
             "collected_pocket",
         ):  # Show inline only when editing existing instance
-            return [CustomerBillCollection]
-        return []
+            return (CustomerBillCollection,)
+        return ()
 
     def get_readonly_fields(self, request, obj=None):
         # If obj is None, it means we are in the add view
