@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=cashly
+POSTGRES_USER=qPiUvOnzqKCCLcamEYwYFZiDPSwaMdzj
+POSTGRES_PASSWORD=Mh0VCZbgnEuUxIlHK41zX8xzGU9fdWSKS3kYF27LHktgxs8AWc3I8xL4lrn8O242
