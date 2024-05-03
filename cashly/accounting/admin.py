@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib import admin
-from django.core.exceptions import ValidationError
 
 from cashly.accounting.models import CashCollectorPocket
 from cashly.accounting.models import CashCollectorTimeLine
@@ -62,24 +61,6 @@ class CashCollectorPocketAdmin(admin.ModelAdmin):
                 "bill",
             )
         return self.readonly_fields_on_change
-
-    def message_user(
-        self,
-        *args,
-        **kwargs,
-    ):
-        if not hasattr(self, "stop_messages"):
-            super().message_user(*args, **kwargs)
-
-    def save_model(self, request, obj, form, change):
-        try:
-            obj.save()  # Save the object
-        except ValidationError as e:
-            self.message_user(request, "\n".join(e.messages), level="ERROR")
-            self.stop_messages = True
-            return
-        else:
-            super().save_model(request, obj, form, change)
 
 
 class CentralSafeAdminForm(forms.ModelForm):
