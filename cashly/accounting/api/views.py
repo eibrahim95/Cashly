@@ -65,4 +65,4 @@ class CashCollectorStatusReportView(ListAPIView):
     def get_queryset(self):
         return CashCollectorTimeLine.objects.filter(
             collector=CashCollector.objects.get(pk=self.request.user.pk),
-        )
+        ).order_by("checkpoint_time")

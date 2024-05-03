@@ -5,6 +5,8 @@ from factory import Faker
 from factory import post_generation
 from factory.django import DjangoModelFactory
 
+from cashly.users.models import CashCollector
+from cashly.users.models import Manager
 from cashly.users.models import User
 
 
@@ -38,4 +40,16 @@ class UserFactory(DjangoModelFactory):
 
     class Meta:
         model = User
+        django_get_or_create = ["username"]
+
+
+class CashCollectorFactory(UserFactory):
+    class Meta:
+        model = CashCollector
+        django_get_or_create = ["username"]
+
+
+class ManagerFactory(UserFactory):
+    class Meta:
+        model = Manager
         django_get_or_create = ["username"]

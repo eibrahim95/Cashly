@@ -18,7 +18,11 @@ class RoleBasedAuthentication(BearerTokenAuthentication, abc.ABC):
     def authenticate(self, request):
         if not self.role_model:
             raise NotImplementedError
-        user, token = super().authenticate(request)
+        try:
+            user, token = super().authenticate(request)
+        except TypeError:
+            msg = _("Invalid token header. No credentials provided.")
+            raise exceptions.AuthenticationFailed(msg) from TypeError
         if user and token:
             if not self.role_model.objects.filter(pk=user.pk).exists():
                 msg = _("Invalid token header. No credentials provided.")
