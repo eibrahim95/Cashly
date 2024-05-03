@@ -20,4 +20,3 @@ class UserAdminCreationForm(admin_forms.UserCreationForm):
         error_messages = {
             "username": {"unique": _("This username has already been taken.")},
         }
-
