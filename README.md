@@ -71,8 +71,10 @@ There are 7 models
 - Create a super user `DJANGO_SUPERUSER_PASSWORD=superadmin python manage.py createsuperuser --username superadmin --email superadmin@cachly.ai --noinput`
   - This creates a superuser with username `superadmin` and password `superadmin`.
 - Create a manager `echo "from cashly.users.models import Manager;manager=Manager.objects.create(username='manager1');manager.set_password('Cashly@2024');manager.save()" | python manage.py shell`
-  - This creates a manager with username `manager` and password `Cashly@2024`.
+  - This creates a manager with username `manager1` and password `Cashly@2024`.
 - Run the server `python manage.py runserver`.
 - You can now use the manager in the Rest API to create collectors and customer and bills.
+- You can then use the created collectors, customers and bills to test the collecting functionality.
+- You can use the created superuser to browse the admin panel.
 
 ---
