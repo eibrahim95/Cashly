@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from cashly.users.models import CashCollector
-from cashly.users.models import User
 
 
 class CashCollectorSerializer(serializers.ModelSerializer):
@@ -15,7 +14,7 @@ class CashCollectorSerializer(serializers.ModelSerializer):
     @staticmethod
     def create(validated_data):
         password = validated_data.pop("password")
-        user = User.objects.create(**validated_data)
+        user = CashCollector.objects.create(**validated_data)
         user.set_password(password)
         user.save()
         return user

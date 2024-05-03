@@ -316,3 +316,4 @@ cashly/media/
 .ipython/
 .env
 .envs/*
+*.db
