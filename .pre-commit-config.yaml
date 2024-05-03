@@ -32,7 +32,7 @@ repos:
     hooks:
       # Linter
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        args: [--fix, --exit-non-zero-on-fix, --line-length, "120"]
       # Formatter
       - id: ruff-format
 
