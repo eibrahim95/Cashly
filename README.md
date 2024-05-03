@@ -8,14 +8,14 @@ Collect due cash
 License: MIT
 
 ## Design Decisions
-![cashly.jpg](docs%2Fcashly.jpg)  
+![cashly.jpg](docs%2Fcashly.jpg)
 <small>A general view of the system , it is not meant to be a full UML, or even a valid one.</small>
 
 ### 1. Where do tasks come from?
 - I decided to make the tasks be created from the admin panel, also i'll provide a crud only to managers, so they can use to create tasks
 - I also decided to separate the Customer, so the tasks crud would need a customers' crud, which i'll also create.
 
-### 2. Multiple cash collectors and multiple managers. 
+### 2. Multiple cash collectors and multiple managers.
 - It makes sense that there will be multiple cash collectors and multiple managers, so the following decisions where made.
 - Managers assign tasks to specific cash collectors when creating tasks.
   - So, we will need a crud for cash collectors.
@@ -25,7 +25,7 @@ License: MIT
 ### 3. Different user table ?
 - For simplicity, we will use django's auth system, and we will just add a field called System Role, which can be manager or cash collector.
   - Update #1: On a second thought let's create a separate model for manager and collector, and make it inherit from User, this will make the relationships between the manager and task, and between the collector and its pocket make more sense.
-- What about the superuser thing ? 
+- What about the superuser thing ?
   - We will ignore the superuser status in all the api endpoints, for example if a cash collector is also a superuser, he will still not be able to call endpoints that need a manager.
 
 ### 4. Keeping history
@@ -39,77 +39,40 @@ License: MIT
 - This might slow the writes a little bit, but the gains are better.
 
 ---
-## Settings
+## Deliverables
+### Models
+There are 7 models
+- users:Manager: extends normal user model.
+- users:CacheCollector: extends normal user model.
+- billing:Customer: So we don't repeat customer details on every bill(task), 1NF.
+- billing:CustomerBill: A task assigned to specific CashCollector.
+- accounting:CashCollectorPocket: A task collected by a CashCollector (The money is in his pocket).
+- accounting:CentralSafe: The money paid to Managers from CashCollectors.
+- accounting:CashCollectorTimeline: Store CashCollector events.
 
-Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).
+### Status at different points.
+- You can log in to admin panel and see the CashCollectorTimeline list, search with a specific collector username.
+- You can use `/api/v1/collector-status-report/` rest api while logged in with the desired collector.
 
----
-## Basic Commands
+### Restfull APIs
+- Please download this [postman collection](https://api.postman.com/collections/3035580-f8619d63-0b92-4e36-878f-2ee31b07f400?access_key=PMAT-01HWZ5ZJMAAZNET471K0WE2CCQ), it has all the details on the endpoints.
+- In the postman collection variables, update `MANAGER_AUTH_KEY`, `COLLECTOR_AUTH_KEY`, these are the keys used for manager, collector operations respectively.
+- The 1,2,3,4 folders are manager operations, the 5,6 folders are collectors operations.
 
-### Setting Up Your Users
+### Test cases
+- I've written integration tests for the main scenario, in 2 different ways, one directly using orm, and other using apis.
+  - You can run it using `DJANGO_SETTINGS_MODULE=config.settings.test pytest -s -vv -k main_scenario`
+- I've also written tests for the most important edge cases.
+  - You can run it using `DJANGO_SETTINGS_MODULE=config.settings.test pytest -s -vv -k edge_cases`
 
-- To create a **normal user account**, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
-
-- To create a **superuser account**, use this command:
-
-      $ python manage.py createsuperuser
-
-For convenience, you can keep your normal user logged in on Chrome and your superuser logged in on Firefox (or similar), so that you can see how the site behaves for both kinds of users.
-
-### Type checks
-
-Running type checks with mypy:
-
-    $ mypy cashly
-
-### Test coverage
-
-To run the tests, check your test coverage, and generate an HTML coverage report:
-
-    $ coverage run -m pytest
-    $ coverage html
-    $ open htmlcov/index.html
-
-#### Running tests with pytest
-
-    $ pytest
-
-### Live reloading and Sass CSS compilation
-
-Moved to [Live reloading and SASS compilation](https://cookiecutter-django.readthedocs.io/en/latest/developing-locally.html#sass-compilation-live-reloading).
-
-### Celery
-
-This app comes with Celery.
-
-To run a celery worker:
-
-```bash
-cd cashly
-celery -A config.celery_app worker -l info
-```
-
-Please note: For Celery's import magic to work, it is important _where_ the celery commands are run. If you are in the same folder with _manage.py_, you should be right.
-
-To run [periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html), you'll need to start the celery beat scheduler service. You can start it as a standalone process:
-
-```bash
-cd cashly
-celery -A config.celery_app beat
-```
-
-or you can embed the beat service inside a worker with the `-B` option (not recommended for production use):
-
-```bash
-cd cashly
-celery -A config.celery_app worker -B -l info
-```
+### Running project.
+- Create a virtualenv, activate it, install `requirements/local.txt`.
+- Migrate database `python manage.py migrate`.
+- Create a super user `DJANGO_SUPERUSER_PASSWORD=superadmin python manage.py createsuperuser --username superadmin --email superadmin@cachly.ai --noinput`
+  - This creates a superuser with username `superadmin` and password `superadmin`.
+- Create a manager `echo "from cashly.users.models import Manager;manager=Manager.objects.create(username='manager1');manager.set_password('Cashly@2024');manager.save()" | python manage.py shell`
+  - This creates a manager with username `manager` and password `Cashly@2024`.
+- Run the server `python manage.py runserver`.
+- You can now use the manager in the Rest API to create collectors and customer and bills.
 
 ---
-## Deployment
-
-The following details how to deploy this application.
-
-### Docker
-
-See detailed [cookiecutter-django Docker documentation](http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html).
